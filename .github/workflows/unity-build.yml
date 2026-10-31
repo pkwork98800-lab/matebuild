@@ -1,0 +1,49 @@
+name: Build MateEngineX (Windows)
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+jobs:
+  build:
+    name: Build Windows Standalone
+    runs-on: windows-latest
+    timeout-minutes: 60
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          lfs: true
+          submodules: recursive
+      
+      - name: Cache Library
+        uses: actions/cache@v4
+        with:
+          path: Library
+          key: Library-${{ runner.os }}-${{ hashFiles('Packages/**', 'Assets/**') }}
+          restore-keys: |
+            Library-${{ runner.os }}-
+      
+      - name: Install Unity
+        uses: game-ci/unity-installer@v4
+        with:
+          unityVersion: 6000.2.6f2
+          cacheKey: unity-${{ runner.os }}-6000.2.6f2
+      
+      - name: Build Windows
+        uses: game-ci/unity-builder@v4
+        with:
+          targetPlatform: StandaloneWindows64
+          projectPath: .
+          buildName: MateEngineX
+          buildPath: build
+          customParameters: -executeMethod BuildScript.PerformBuild
+      
+      - name: Upload Build Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: MateEngineX-Windows
+          path: build/
+          retention-days: 7
