@@ -2,17 +2,15 @@ workflows:
   unity-windows-build:
     name: Unity Windows Build
     max_build_duration: 60
-    instance_type: windows
+    instance_type: windows_x2
     environment:
-      unity_version: 6000.2.6f2
+      vars:
+        UNITY_VERSION: "6000.2.6f2"
     cache:
       cache_paths:
         - Library
         - Temp
     scripts:
-      - name: Restore NuGet packages
-        script: |
-          # Unity will restore packages automatically
       - name: Build Windows Standalone
         script: |
           $unityPath = "C:\Program Files\Unity\Hub\Editor\6000.2.6f2\Editor\Unity.exe"
@@ -40,7 +38,7 @@ workflows:
     publishing:
       email:
         recipients:
-          - your-email@example.com  # Change this
+          - your-email@example.com
         notify:
           success: true
           failure: true
