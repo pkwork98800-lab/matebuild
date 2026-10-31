@@ -9,7 +9,7 @@ jobs:
   build:
     name: Build Windows Standalone
     runs-on: windows-latest
-    timeout-minutes: 60
+    timeout-minutes: 90
     
     steps:
       - name: Checkout repository
@@ -26,20 +26,36 @@ jobs:
           restore-keys: |
             Library-${{ runner.os }}-
       
+      - name: Download Unity
+        run: |
+          $unityUrl = "https://download.unity3d.com/download_unity/4a4dcaec6541/Windows64EditorInstaller/UnitySetup64-6000.2.6f2.exe"
+          $installerPath = "UnitySetup.exe"
+          Invoke-WebRequest -Uri $unityUrl -OutFile $installerPath -UseBasicParsing
+          
       - name: Install Unity
-        uses: game-ci/unity-installer@v2
-        with:
-          unityVersion: 6000.2.6f2
-      
+        run: |
+          $installArgs = "/S /D=C:\Unity\6000.2.6f2"
+          Start-Process -FilePath "UnitySetup.exe" -ArgumentList $installArgs -Wait -NoNewWindow
+          # Add Unity to PATH
+          echo "C:\Unity\6000.2.6f2\Editor" | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
+          
+      - name: Verify Unity Installation
+        run: |
+          & "C:\Unity\6000.2.6f2\Editor\Unity.exe" -version
+          
       - name: Build Windows
-        uses: game-ci/unity-builder@v2
-        with:
-          targetPlatform: StandaloneWindows64
-          projectPath: .
-          buildName: MateEngineX
-          buildPath: build
-          customParameters: -executeMethod BuildScript.PerformBuild
-      
+        run: |
+          $unityPath = "C:\Unity\6000.2.6f2\Editor\Unity.exe"
+          $buildArgs = @(
+            "-batchmode",
+            "-projectPath", ".",
+            "-executeMethod", "BuildScript.PerformBuild",
+            "-logFile", "-",
+            "-quit",
+            "-buildTarget", "StandaloneWindows64"
+          )
+          & $unityPath $buildArgs
+          
       - name: Upload Build Artifact
         uses: actions/upload-artifact@v4
         with:
