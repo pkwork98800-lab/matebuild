@@ -1,0 +1,46 @@
+workflows:
+  unity-windows-build:
+    name: Unity Windows Build
+    max_build_duration: 60
+    instance_type: windows
+    environment:
+      unity_version: 6000.2.6f2
+    cache:
+      cache_paths:
+        - Library
+        - Temp
+    scripts:
+      - name: Restore NuGet packages
+        script: |
+          # Unity will restore packages automatically
+      - name: Build Windows Standalone
+        script: |
+          $unityPath = "C:\Program Files\Unity\Hub\Editor\6000.2.6f2\Editor\Unity.exe"
+          if (-not (Test-Path $unityPath)) {
+            Write-Error "Unity not found at $unityPath"
+            exit 1
+          }
+          & $unityPath -batchmode -projectPath . -executeMethod BuildScript.PerformBuild -logFile - -quit
+          if ($LASTEXITCODE -ne 0) {
+            Write-Error "Unity build failed with exit code $LASTEXITCODE"
+            exit $LASTEXITCODE
+          }
+      - name: Verify Build Output
+        script: |
+          if (Test-Path "build/MateEngineX.exe") {
+            Write-Host "Build successful: build/MateEngineX.exe"
+            Get-Item "build/MateEngineX.exe" | Select-Object Name,Length,LastWriteTime
+          } else {
+            Write-Error "Build output not found"
+            Get-ChildItem "build" -Recurse -ErrorAction SilentlyContinue
+            exit 1
+          }
+    artifacts:
+      - build/**
+    publishing:
+      email:
+        recipients:
+          - your-email@example.com  # Change this
+        notify:
+          success: true
+          failure: true
