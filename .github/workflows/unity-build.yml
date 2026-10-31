@@ -27,13 +27,12 @@ jobs:
             Library-${{ runner.os }}-
       
       - name: Install Unity
-        uses: game-ci/unity-installer@v4
+        uses: game-ci/unity-installer@v2
         with:
           unityVersion: 6000.2.6f2
-          cacheKey: unity-${{ runner.os }}-6000.2.6f2
       
       - name: Build Windows
-        uses: game-ci/unity-builder@v4
+        uses: game-ci/unity-builder@v2
         with:
           targetPlatform: StandaloneWindows64
           projectPath: .
